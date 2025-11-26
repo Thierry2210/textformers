@@ -108,12 +108,13 @@
 
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
-import { loadEssays, addEssay } from '@/stores/essays.js'
+import { createEssay } from '../services/essay'
 
 const title = ref('')
 const content = ref('')
 const feedback = ref(null)
-const remaining = ref(10)
+const error = ref('')
+const remaining = ref(5)
 const submitting = ref(false)
 const clearing = ref(false)
 let isMounted = true
@@ -127,6 +128,40 @@ const canSubmit = computed(() =>
   remaining.value > 0
 )
 
+async function submitEssay() {
+  try {
+    const data = {
+      title: title.value,
+      content: content.value
+    }
+    const res = await createEssay(data)
+    console.log("Redacao:", res)
+
+  } catch (erro) {
+    console.error('Erro ao enviar redação:', erro)
+    error.value = erro.response?.data?.message || 'Erro.'
+  }
+}
+
+async function feedbackEssay() {
+  try {
+    submitting.value = true
+    const res = await createEssay(data)
+    if (isMounted) {
+      feedback.value = res.data
+      remaining.value--
+    }
+  } catch (erro) {
+    if (isMounted) {
+      error.value = erro.response?.data?.message || 'Erro.'
+    }
+  } finally {
+    if (isMounted) {
+      submitting.value = false
+    }
+  }
+}
+
 function clearFile() {
   clearing.value = true
   setTimeout(() => {
@@ -134,25 +169,7 @@ function clearFile() {
     content.value = ''
     feedback.value = null
     clearing.value = false
-  }, 500)
-}
-
-async function submitEssay() {
-  if (!canSubmit.value) return
-  submitting.value = true
-
-  const fb = {
-    summary: `Sua redação apresenta um ótimo domínio da norma padrão e demonstra maturidade argumentativa ao discutir a invisibilidade do trabalho de cuidado. 
-    As referências a Djamila Ribeiro e Zygmunt Bauman enriquecem a reflexão e mostram repertório sociocultural produtivo. 
-    Contudo, seria interessante aprimorar a fluidez entre os parágrafos e evitar repetições para tornar o texto mais coeso. 
-    A conclusão é pertinente e propõe soluções viáveis, reforçando a competência de intervenção. Excelente desempenho geral!`,
-    score: 9.5
-  }
-
-  feedback.value = fb
-  addEssay({ title: title.value, content: content.value, feedback: fb })
-  remaining.value--
-  submitting.value = false
+  }, 100)
 }
 
 const fileInputRef = ref(null)

@@ -21,7 +21,10 @@
       </div>
 
       <div v-if="items.length === 0" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center">
-        </div>
+        <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">Nenhuma redação corrigida ainda</h3>
+        <p class="text-gray-500">Envie sua primeira redação para começar a acompanhar seu progresso.</p>
+      </div>
 
       <div v-else class="space-y-4">
         <div v-for="it in items" :key="it.id" class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-200">
@@ -38,12 +41,11 @@
                 </div>
               </div>
               
-              <div v-if="it.feedback" class="text-right">
+              <div class="text-right">
                 <div class="flex items-center gap-2 mb-1">
-                  <i class="fas fa-star text-yellow-500"></i>
-                  <span class="text-lg font-bold text-gray-800">{{ it.feedback.score }}</span>
+                  <span class="text-lg font-bold text-gray-800">{{ it.score }}/1000</span>
                 </div>
-                <div class="text-xs text-gray-500 max-w-xs">{{ it.feedback.summary }}</div>
+                <div class="text-xs text-gray-500 max-w-xs">Nota ENEM</div>
               </div>
             </div>
 
@@ -63,14 +65,29 @@
               </div>
 
               <div v-if="expandedItems.includes(it.id)" class="space-y-4">
-                <div v-if="it.feedback.errors && it.feedback.errors.length > 0" class="bg-red-50 border border-red-200 rounded-lg p-4">
-                  </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h5 class="font-medium text-blue-700 mb-2 flex items-center gap-2">
+                    <i class="fas fa-file-alt"></i>
+                    Conteúdo Original
+                  </h5>
+                  <p class="text-blue-800 whitespace-pre-line">{{ it.content }}</p>
+                </div>
 
-                <div v-if="it.feedback.suggestions && it.feedback.suggestions.length > 0" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  </div>
+                <div v-if="it.correctedContent" class="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h5 class="font-medium text-green-700 mb-2 flex items-center gap-2">
+                    <i class="fas fa-edit"></i>
+                    Texto Corrigido
+                  </h5>
+                  <p class="text-green-800 whitespace-pre-line">{{ it.correctedContent }}</p>
+                </div>
 
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  </div>
+                  <h5 class="font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <i class="fas fa-comments"></i>
+                    Feedback Detalhado
+                  </h5>
+                  <p class="text-gray-800 whitespace-pre-line">{{ it.feedback }}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -80,36 +97,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getEssays } from '@/services/essay.js'
 
-const items = ref([
-  {
-    id: 'essay-1', 
-    title: 'Minha Redação de Exemplo 1', 
-    content: 'Conteúdo da redação...',
-    createdAt: new Date().toISOString(),
-    feedback: {
-      score: 8.5,
-      summary: 'Bom texto, mas revise as vírgulas.',
-      errors: [{ type: 'Pontuação', message: 'Vírgula fora de lugar' }],
-      suggestions: ['Revisar uso de vírgulas.']
-    }
-  },
-  {
-    id: 'essay-2', 
-    title: 'Outra Redação Corrigida', 
-    content: 'Mais conteúdo...',
-    createdAt: '2025-10-20T10:00:00.000Z',
-    feedback: {
-      score: 9.0,
-      summary: 'Ótima argumentação.',
-      errors: [],
-      suggestions: ['Melhorar a introdução.']
-    }
-  }
-])
-
+const items = ref([])
 const expandedItems = ref([])
+
+onMounted(async () => {
+  try {
+    const data = await getEssays()
+    items.value = data
+  } catch (error) {
+    console.error('Erro ao carregar histórico:', error)
+  }
+})
 
 function toggleDetails(itemId) {
   const index = expandedItems.value.indexOf(itemId)

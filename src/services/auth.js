@@ -1,27 +1,43 @@
-import axios from "axios";
+import axios from 'axios';
 
 const api = axios.create({
-  baseURL: "https://localhost:7280"
+  baseURL: 'https://localhost:7280',
+  headers: { 'Content-Type': 'application/json' }
 });
 
-export function setAuthToken(token) {
-  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  else delete api.defaults.headers.common["Authorization"];
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export async function loginUser(payload) {
+  const { email, password } = payload;
+
+  const res = await api.post('/User/auth', { email, password });
+
+  const token = res.data?.token ?? res.data;
+
+  if (token) {
+    localStorage.setItem('token', token);
+  }
+
+  return res.data;
+}
+
+export async function getCurrentUser() {
+  const res = await api.get('/User')
+  return res.data
 }
 
 export async function registerUser(payload) {
-  const res = await api.post("/user/register", payload);
-  return res.data;
+  return api.post('/User', payload);
 }
 
-export async function loginUser(payload) {
-  const res = await api.post("/user/login", payload);
-  return res.data;
-}
-
-export async function logoutUser(payload) {
-  const res = await api.post(`/user/logout/${userId}`, payload);
-  return res.data;
+export function logoutUser() {
+  localStorage.removeItem('token');
 }
 
 export default api;

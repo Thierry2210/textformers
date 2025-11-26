@@ -135,19 +135,24 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getEssays } from '../services/essay.js'
 
-// Dados estáticos para o visual
-const loading = ref(false)
-const totalCorrigidos = ref(1)
+const loading = ref(true)
+const totalCorrigidos = ref(0)
 const principaisErros = ref(['Vírgula', 'Concordância'])
 const remainingCorrections = ref(9)
-const recent = ref([
-  { 
-    id: 'essay-1', 
-    title: 'Minha Redação de Exemplo', 
-    createdAt: new Date().toISOString(),
-    feedback: { score: 8.5 }
+const recent = ref([])
+
+onMounted(async () => {
+  try {
+    const essays = await getEssays()
+    totalCorrigidos.value = essays.length
+    recent.value = essays.slice(-5).reverse()
+  } catch (error) {
+    console.error('Erro ao carregar dados do dashboard:', error)
+  } finally {
+    loading.value = false
   }
-])
+})
 </script>
