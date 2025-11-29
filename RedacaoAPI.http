@@ -1,0 +1,6 @@
+@RedacaoAPI_HostAddress = http://localhost:5168
+
+GET {{RedacaoAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
