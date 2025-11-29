@@ -88,8 +88,8 @@
         </h2>
       </div>
       <div class="p-6">
-        <div class="h-32 w-full bg-primary-50 rounded-lg flex items-center justify-center text-secondary-400">
-          (Gráfico de evolução aparecerá aqui)
+        <div class="h-64 w-full">
+          <Line :data="chartData" :options="chartOptions" />
         </div>
       </div>
     </div>
@@ -137,12 +137,81 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getEssays } from '../services/essay.js'
+import { Line } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+)
 
 const loading = ref(true)
 const totalCorrigidos = ref(0)
 const principaisErros = ref(['Vírgula', 'Concordância'])
 const remainingCorrections = ref(9)
 const recent = ref([])
+
+const chartData = ref({
+  labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+  datasets: [
+    {
+      label: 'Correções',
+      data: [2, 5, 3, 8, 6, 10],
+      borderColor: '#3B82F6',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      tension: 0.4,
+      fill: true
+    }
+  ]
+})
+
+const chartOptions = ref({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false
+    },
+    tooltip: {
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      titleColor: '#fff',
+      bodyColor: '#fff'
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: 'rgba(0, 0, 0, 0.1)'
+      },
+      ticks: {
+        color: '#6B7280'
+      }
+    },
+    x: {
+      grid: {
+        display: false
+      },
+      ticks: {
+        color: '#6B7280'
+      }
+    }
+  }
+})
 
 onMounted(async () => {
   try {

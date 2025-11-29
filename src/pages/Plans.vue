@@ -14,16 +14,7 @@
           impulsionar resultados.
         </p>
         <div class="mt-10 flex justify-center">
-          <div class="flex rounded-full bg-secondary-800 p-1 text-sm font-semibold border border-primary-700">
-            <button @click="billing = 'monthly'"
-              :class="[billing === 'monthly' ? 'bg-primary-600 text-white shadow-lg' : 'text-primary-200 hover:text-white', 'rounded-full px-6 py-2 transition-all duration-200']">
-              Mensal
-            </button>
-            <button @click="billing = 'annually'"
-              :class="[billing === 'annually' ? 'bg-primary-600 text-white shadow-lg' : 'text-primary-200 hover:text-white', 'rounded-full px-6 py-2 transition-all duration-200']">
-              Anual
-            </button>
-          </div>
+          <p class="text-primary-100">Preços mensais</p>
         </div>
       </div>
     </header>
@@ -47,14 +38,14 @@
           <div class="text-center mb-6">
             <h3 class="text-2xl font-bold text-white mb-2">{{ p.name }}</h3>
             <div class="flex items-baseline justify-center">
-              <span class="text-5xl font-bold text-white">R${{ billing === 'monthly' ? p.monthly : p.annually }}</span>
+              <span class="text-5xl font-bold text-white">R${{ p.price }}</span>
               <span class="text-xl font-medium text-primary-200 ml-2">BRL</span>
             </div>
-            <p class="text-primary-200 text-sm mt-2">Cobrança {{ billing === 'monthly' ? 'mensal' : 'anual' }}</p>
+            <p class="text-primary-200 text-sm mt-2">Cobrança mensal</p>
           </div>
 
           <ul class="mt-6 space-y-4 flex-1">
-            <li v-for="f in p.features" :key="f" class="flex items-center text-primary-100">
+            <li v-for="f in p.features || []" :key="f" class="flex items-center text-primary-100">
               <i class="fas fa-check-circle text-primary-400 mr-3 text-lg"></i>
               <span>{{ f }}</span>
             </li>
@@ -66,8 +57,8 @@
               ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg hover:from-primary-600 hover:to-primary-700'
               : 'bg-primary-600 text-white hover:bg-primary-700'
           ]">
-            <i class="fas fa-shopping-cart mr-2"></i>
-            Assinar este plano
+            <i class="fas fa-sync-alt mr-2"></i>
+            Atualizar Plano
           </button>
         </div>
       </div>
@@ -97,68 +88,64 @@
         </div>
       </div>
     </section>
+
+    <!-- Modal -->
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg">
+        <p class="text-secondary-900">{{ modalMessage }}</p>
+        <button @click="showModal = false" class="mt-4 bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 transition-colors">
+          OK
+        </button>
+      </div>
+    </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getPlans } from '../services/plans'
+import { updateUser } from '../services/auth'
 
-const billing = ref('monthly')
 const openFAQ = ref(null)
+const plans = ref([])
+const showModal = ref(false)
+const modalMessage = ref('')
+
+onMounted(async () => {
+  try {
+    const plansData = await getPlans()
+    plans.value = plansData.map(p => {
+      let features = []
+      let highlight = false
+      if (p.id === 1) {
+        features = ['Até 5 correções por mês', 'Assistente de IA básico', 'Correção gramatical automática']
+      } else if (p.id === 2) {
+        features = ['Até 15 correções por mês', 'Assistente de IA intermediário', 'Correção gramatical e estilística']
+      } else if (p.id === 3) {
+        features = ['Correções ilimitadas', 'Assistente de IA avançado', 'Correção gramatical e estilística', 'Templates personalizados', 'Análise de plágio integrada', 'Suporte prioritário 24/7']
+        highlight = true
+      }
+      return { ...p, features, highlight }
+    })
+  } catch (err) {
+    console.error('Erro ao carregar planos:', err)
+  }
+})
 
 const toggleFAQ = (i) => {
   openFAQ.value = openFAQ.value === i ? null : i
 }
 
-const subscribe = (planId) => {
-  const plan = plans.find(p => p.id === planId)
-  if (plan) {
-    alert(`Você assinou o plano ${plan.name} por ${billing.value === 'monthly' ? 'R$' + plan.monthly + '/mês' : 'R$' + plan.annually + '/ano'}`)
+const subscribe = async (planId) => {
+  try {
+    await updateUser({ planId })
+    modalMessage.value = 'Plano atualizado com sucesso!'
+    showModal.value = true
+  } catch (err) {
+    console.error('Erro ao atualizar plano:', err)
+    modalMessage.value = 'Erro ao atualizar plano.'
+    showModal.value = true
   }
 }
-
-const plans = [
-  {
-    id: 'starter',
-    name: 'Vestibulando',
-    monthly: 19,
-    annually: 190,
-    features: [
-      'Até 10 redações por mês',
-      'Assistente de IA básico',
-      'Correção gramatical automática',
-      'Templates de redação simples'
-    ],
-  },
-  {
-    id: 'scale',
-    name: 'ITA',
-    monthly: 99,
-    annually: 990,
-    highlight: true,
-    features: [
-      'Redações ilimitadas',
-      'Assistente de IA avançado',
-      'Correção gramatical e estilística',
-      'Templates personalizados',
-      'Análise de plágio integrada',
-      'Colaboração em tempo real',
-      'Suporte prioritário 24/7'
-    ],
-  },
-  {
-    id: 'growth',
-    name: 'MED',
-    monthly: 49,
-    annually: 490,
-    features: [
-      'Até 50 redações por mês',
-      'Assistente de IA intermediário',
-      'Correção gramatical e estilística',
-      'Templates avançados',
-      'Análise de plágio básica'
-    ],
-  },
-]
 
 const faqs = [
   { q: "Como funciona a cobrança?", a: "Você pode escolher entre pagamento mensal ou anual. O valor será cobrado automaticamente conforme sua escolha." },

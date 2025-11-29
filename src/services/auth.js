@@ -36,6 +36,11 @@ export async function registerUser(payload) {
   return api.post('/User', payload);
 }
 
+export async function updateUser(payload) {
+  const res = await api.put('/User', payload);
+  return res.data;
+}
+
 export function logoutUser() {
   localStorage.removeItem('token');
 }
