@@ -33,6 +33,20 @@ namespace RedacaoAPI.Controllers
             }
         }
 
+        [HttpGet]
+        public IActionResult GetAllPlans() // << NOVO
+        {
+            try
+            {
+                var plans = _planService.GetAllPlans();
+                return Ok(plans);
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(new { message = exception.Message });
+            }
+        }
+
         [HttpGet("{id}")]
         public IActionResult GetPlanById(int id)
         {

@@ -2,7 +2,6 @@
 using RedacaoAPI.DTOs;
 using RedacaoAPI.Interfaces;
 using RedacaoAPI.Models;
-
 namespace RedacaoAPI.Services
 {
     public class PlanService : IPlanService
@@ -12,6 +11,11 @@ namespace RedacaoAPI.Services
         public PlanService(IPlanRepository planRepository)
         {
             _repository = planRepository;
+        }
+
+        public IEnumerable<Plan> GetAllPlans()
+        {
+            return _repository.GetAll();
         }
 
         public Plan CreatePlan(PlanCreateDTO planDTO)
