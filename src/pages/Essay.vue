@@ -1,188 +1,169 @@
 <template>
-  <div class="min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 py-8">
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-        <section class="bg-white rounded-2xl shadow-strong border border-primary-200 overflow-hidden">
-          <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
-            <h1 class="text-2xl font-bold text-white flex items-center gap-3">
-              <i class="fas fa-edit text-2xl"></i>
-              Nova Redação
-            </h1>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-4">
+          <div class="p-3 bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl">
+            <i class="fas fa-edit text-2xl text-white"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-white">Enviar Redação</h1>
+            <p class="text-primary-100">Envie sua redação para correção</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-primary-100 text-sm font-medium">Correções Restantes</p>
+          <p class="text-2xl font-bold text-white">{{ remainingCorrections > 1000 ? 'Ilimitadas' : remainingCorrections }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-strong border border-primary-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-3">
+          <i class="fas fa-file-alt text-2xl"></i>
+          Detalhes da Redação
+        </h2>
+      </div>
+      <div class="p-6">
+        <form @submit.prevent="handleSubmit" class="space-y-6">
+          <p v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+            {{ error }}
+          </p>
+
+          <div v-if="submittedEssay && submittedEssay.feedback" class="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+            <h3 class="text-sm font-medium text-green-800 mb-2">Feedback da IA:</h3>
+            <ul class="list-disc list-inside text-sm text-green-700 space-y-1 mb-2">
+              <li v-for="point in feedbackPoints" :key="point">{{ point }}</li>
+            </ul>
+            <p class="text-sm text-green-600">Nota: {{ submittedEssay.score || 'N/A' }}</p>
+            <div v-if="submittedEssay.correctedContent" class="mt-4">
+              <h4 class="text-sm font-medium text-green-800 mb-2">Redação Corrigida:</h4>
+              <div class="text-sm text-green-700 bg-green-50 p-3 rounded whitespace-pre-line">{{ submittedEssay.correctedContent }}</div>
+            </div>
           </div>
 
-          <div class="p-6 space-y-6">
-            <div class="space-y-2">
-              <label class="text-sm font-medium text-secondary-700 flex items-center gap-2">
-                <i class="fas fa-heading text-primary-500"></i>
-                Título da Redação
-              </label>
-              <input v-model="title" placeholder="Digite o título da sua redação..."
-                class="w-full text-black px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-primary-50 hover:bg-white" />
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium text-secondary-700 flex items-center gap-2">
-                <i class="fas fa-file-alt text-primary-500"></i>
-                Conteúdo
-              </label>
-              <textarea v-model="content" rows="14" placeholder="Escreva sua redação aqui..."
-                class="w-full text-black px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-primary-50 hover:bg-white resize-none"></textarea>
-            </div>
-
-            <div class="space-y-4">
-              <div class="flex flex-col sm:flex-row gap-3">
-                <div class="flex-1">
-                  <label class="block text-sm font-medium text-secondary-700 mb-2">
-                    <i class="fas fa-upload text-green-500 mr-2"></i>
-                    Carregar Arquivo
-                  </label>
-                  <input ref="fileInputRef" type="file" accept=".txt,.doc,.docx" @change="handleFile"
-                    class="block w-full text-sm text-secondary-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
-                </div>
-                <button type="button" @click="clearFile"
-                  class="px-4 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-all duration-200 flex items-center gap-2 font-medium">
-                  <i class="fas fa-sync-alt animate-spin" v-show="clearing"></i>
-                  <i class="fas fa-trash-alt" v-show="!clearing"></i>
-                  Limpar Redação
-                </button>
-              </div>
-            </div>
-
-            <div class="space-y-3">
-              <button :disabled="!canSubmit" @click="submitEssay"
-                class="w-full inline-flex items-center justify-center gap-3 px-6 py-4 rounded-lg text-white font-semibold shadow-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-primary-300 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
-                :class="canSubmit ? 'bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800' : 'bg-secondary-400'">
-                <i v-if="submitting" class="fas fa-spinner animate-spin text-xl"></i>
-                <i v-else class="fas fa-paper-plane text-xl"></i>
-                <span>{{ submitting ? 'Enviando...' : 'Enviar para Correção' }}</span>
-              </button>
-
-              <div class="flex items-center justify-between text-sm">
-                <div class="flex items-center gap-2 text-secondary-600">
-                  <i class="fas fa-chart-line text-green-500"></i>
-                  <span>Correções restantes: <span class="font-semibold text-primary-600">{{ remaining }}</span></span>
-                </div>
-                <div v-if="!content.trim() || !title.trim()" class="flex items-center gap-2 text-red-600">
-                  <i class="fas fa-exclamation-triangle"></i>
-                  <span>Preencha título e conteúdo</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section v-if="feedback" class="bg-white rounded-2xl shadow-strong border border-primary-200 overflow-hidden">
-          <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
-            <h2 class="text-2xl font-bold text-white flex items-center gap-3">
-              <i class="fas fa-check-circle text-2xl"></i>
-              Feedback da Correção
-            </h2>
+          <div>
+            <label class="block text-sm font-medium text-secondary-700 mb-2">Título da Redação</label>
+            <input v-model="title" type="text" required
+              class="w-full text-black bg-primary-50 border border-primary-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+              placeholder="Digite o título da sua redação" />
           </div>
 
-          <div class="p-6 space-y-6">
-            <div class="bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl p-4 border border-primary-200">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <i class="fas fa-star text-yellow-500 text-2xl"></i>
-                  <span class="text-lg font-medium text-secondary-700">Nota Final</span>
-                </div>
-                <div class="text-3xl font-bold text-primary-600">{{ feedback.score }}</div>
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <h3 class="text-lg font-semibold text-secondary-800 flex items-center gap-2">
-                <i class="fas fa-comment-alt text-primary-500"></i>
-                Resumo Geral
-              </h3>
-              <p class="text-secondary-700 bg-primary-50 rounded-lg p-4 border-l-4 border-primary-500">{{
-                feedback.summary }}</p>
-            </div>
-
+          <div>
+            <label class="block text-sm font-medium text-secondary-700 mb-2">Conteúdo da Redação</label>
+            <textarea v-model="content" required rows="15"
+              class="w-full text-black bg-primary-50 border border-primary-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 resize-vertical"
+              placeholder="Digite o conteúdo da sua redação aqui..."></textarea>
           </div>
-        </section>
+
+          <div>
+            <label class="block text-sm font-medium text-secondary-700 mb-2">Ou envie um arquivo (.txt, .docx)</label>
+            <input type="file" @change="handleFileUpload" accept=".txt,.docx"
+              class="w-full text-black bg-primary-50 border border-primary-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" />
+          </div>
+
+          <div class="flex gap-4">
+            <button type="button" @click="clearForm"
+              class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-medium hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 shadow-medium">
+              <i class="fas fa-trash mr-2"></i>
+              Limpar Redação
+            </button>
+            <button type="submit" :disabled="loading || remainingCorrections <= 0"
+              class="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 rounded-lg font-medium hover:from-primary-700 hover:to-primary-800 transition-all duration-200 transform hover:scale-105 shadow-medium disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-paper-plane mr-2"></i>
+              {{ loading ? 'Enviando...' : 'Enviar Redação' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
-import { createEssay } from '../services/essay'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { createEssay, getEssays } from '../services/essay.js'
+import { getCurrentUser } from '../services/auth.js'
+import { getPlan } from '../services/plans.js'
 
 const title = ref('')
 const content = ref('')
-const feedback = ref(null)
 const error = ref('')
-const remaining = ref(5)
-const submitting = ref(false)
-const clearing = ref(false)
-let isMounted = true
+const loading = ref(false)
+const router = useRouter()
+const remainingCorrections = ref(0)
+const submittedEssay = ref(null)
 
-onUnmounted(() => { isMounted = false })
+const feedbackPoints = computed(() => {
+  if (!submittedEssay.value || !submittedEssay.value.feedback) return []
+  return submittedEssay.value.feedback.split('\n-').filter(p => p.trim()).map(p => p.trim())
+})
 
-const canSubmit = computed(() =>
-  title.value.trim().length > 0 &&
-  content.value.trim().length > 0 &&
-  !submitting.value &&
-  remaining.value > 0
-)
-
-async function submitEssay() {
+onMounted(async () => {
   try {
-    const data = {
-      title: title.value,
-      content: content.value
+    const [essays, user] = await Promise.all([getEssays(), getCurrentUser()])
+    let plan = null
+    if (user.planId) {
+      plan = await getPlan(user.planId)
     }
-    const res = await createEssay(data)
-    console.log("Redacao:", res)
-
-  } catch (erro) {
-    console.error('Erro ao enviar redação:', erro)
-    error.value = erro.response?.data?.message || 'Erro.'
+    if (plan && plan.maxCorrections > 1000000) {
+      remainingCorrections.value = 999999 // Unlimited
+    } else {
+      remainingCorrections.value = (plan?.maxCorrections || 0) - essays.length
+    }
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error)
   }
-}
+})
 
-async function feedbackEssay() {
-  try {
-    submitting.value = true
-    const res = await createEssay(data)
-    if (isMounted) {
-      feedback.value = res.data
-      remaining.value--
-    }
-  } catch (erro) {
-    if (isMounted) {
-      error.value = erro.response?.data?.message || 'Erro.'
-    }
-  } finally {
-    if (isMounted) {
-      submitting.value = false
-    }
-  }
-}
-
-function clearFile() {
-  clearing.value = true
-  setTimeout(() => {
-    title.value = ''
-    content.value = ''
-    feedback.value = null
-    clearing.value = false
-  }, 100)
-}
-
-const fileInputRef = ref(null)
-
-function handleFile(event) {
+function handleFileUpload(event) {
   const file = event.target.files[0]
   if (!file) return
 
   const reader = new FileReader()
-  reader.onload = () => {
-    content.value = reader.result 
+  reader.onload = (e) => {
+    content.value = e.target.result
+    if (!title.value) {
+      title.value = file.name.replace(/\.[^/.]+$/, '')
+    }
   }
   reader.readAsText(file)
 }
 
+function clearForm() {
+  title.value = ''
+  content.value = ''
+  error.value = ''
+  submittedEssay.value = null
+}
+
+async function handleSubmit() {
+  try {
+    error.value = ''
+    loading.value = true
+    submittedEssay.value = null
+
+    const payload = {
+      title: title.value,
+      content: content.value
+    }
+
+    const result = await createEssay(payload)
+    submittedEssay.value = result
+
+    if (result.feedback) {
+    } else {
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+    }
+  } catch (err) {
+    console.error('Erro ao enviar redação:', err)
+    error.value = err.response?.data?.message || 'Erro ao enviar redação. Tente novamente.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>

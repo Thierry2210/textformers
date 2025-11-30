@@ -15,8 +15,8 @@ export async function getPlan(id) {
   return res.data
 }
 
-export async function changePlan(id) {
-  const res = await api.put(`/Plan/${id}`, {})
+export async function changePlan(id, payload) {
+  const res = await api.put(`/Plan/${id}`, payload)
   return res.data
 }
 

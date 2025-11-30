@@ -36,16 +36,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { logoutUser, getCurrentUser } from '../services/auth'
+import { logoutUser, getCurrentUser, isLoggedIn } from '../services/auth'
 
 const menuOpen = ref(false)
 const router = useRouter()
 const error = ref('')
 const user = ref(null)
-
-const isLoggedIn = computed(() => !!localStorage.getItem('token'))
 
 function toggleMenu() {
   if (!isLoggedIn.value) return
@@ -85,5 +83,13 @@ async function logout() {
 
 onMounted(() => {
   loadUser()
+})
+
+watch(isLoggedIn, (newVal) => {
+  if (newVal) {
+    loadUser()
+  } else {
+    user.value = null
+  }
 })
 </script>

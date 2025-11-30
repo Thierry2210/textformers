@@ -1,4 +1,20 @@
 import axios from 'axios';
+import { ref, computed } from 'vue'
+
+const token = ref(localStorage.getItem('token'))
+
+const isLoggedIn = computed(() => !!token.value)
+
+function setToken(newToken) {
+  token.value = newToken
+  if (newToken) {
+    localStorage.setItem('token', newToken)
+  } else {
+    localStorage.removeItem('token')
+  }
+}
+
+export { isLoggedIn, setToken }
 
 const api = axios.create({
   baseURL: 'https://localhost:7280',
@@ -21,7 +37,13 @@ export async function loginUser(payload) {
   const token = res.data?.token ?? res.data;
 
   if (token) {
-    localStorage.setItem('token', token);
+    setToken(token);
+  }
+
+  if (res.data?.userPermission === 'Admin') {
+    localStorage.setItem('isAdmin', 'true');
+  } else {
+    localStorage.removeItem('isAdmin');
   }
 
   return res.data;
@@ -29,6 +51,13 @@ export async function loginUser(payload) {
 
 export async function getCurrentUser() {
   const res = await api.get('/User')
+
+  if (res.data?.userPermission === 'Admin') {
+    localStorage.setItem('isAdmin', 'true');
+  } else {
+    localStorage.removeItem('isAdmin');
+  }
+
   return res.data
 }
 
@@ -42,7 +71,17 @@ export async function updateUser(payload) {
 }
 
 export function logoutUser() {
-  localStorage.removeItem('token');
+  setToken(null);
+}
+
+export async function getAllUsers() {
+  const res = await api.get('/User/all')
+  return res.data
+}
+
+export async function updateUserPermission(userId, permission) {
+  const res = await api.patch('/permission', { id: userId, permission })
+  return res.data
 }
 
 export default api;

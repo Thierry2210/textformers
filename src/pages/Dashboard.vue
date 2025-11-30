@@ -63,7 +63,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-primary-100 text-sm font-medium">Correções Restantes</p>
-              <p class="text-3xl font-bold text-white">{{ remainingCorrections }}
+              <p class="text-3xl font-bold text-white">{{ remainingCorrections > 1000 ? 'Ilimitadas' : remainingCorrections }}
               </p>
             </div>
             <div class="p-3 bg-white/20 rounded-xl">
@@ -137,6 +137,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getEssays } from '../services/essay.js'
+import { getCurrentUser } from '../services/auth.js'
+import { getPlan } from '../services/plans.js'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -146,7 +148,8 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 } from 'chart.js'
 
 ChartJS.register(
@@ -156,7 +159,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 )
 
 const loading = ref(true)
@@ -215,9 +219,46 @@ const chartOptions = ref({
 
 onMounted(async () => {
   try {
-    const essays = await getEssays()
+    const [essays, user] = await Promise.all([getEssays(), getCurrentUser()])
     totalCorrigidos.value = essays.length
     recent.value = essays.slice(-5).reverse()
+
+    // Calculate principaisErros (placeholder, since feedback is string)
+    principaisErros.value = ['Vírgula', 'Concordância', 'Regência']
+
+    // Fetch plan and calculate remainingCorrections
+    let plan = null
+    if (user.planId) {
+      plan = await getPlan(user.planId)
+    }
+    if (plan && plan.maxCorrections > 1000000) {
+      remainingCorrections.value = 999999 // Unlimited
+    } else {
+      remainingCorrections.value = (plan?.maxCorrections || 0) - essays.length
+    }
+
+    // Calculate chartData
+    const monthlyCounts = {}
+    essays.forEach(essay => {
+      const date = new Date(essay.createdAt)
+      const month = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' })
+      monthlyCounts[month] = (monthlyCounts[month] || 0) + 1
+    })
+    const labels = Object.keys(monthlyCounts).sort()
+    const data = labels.map(label => monthlyCounts[label])
+    chartData.value = {
+      labels,
+      datasets: [
+        {
+          label: 'Correções',
+          data,
+          borderColor: '#3B82F6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    }
   } catch (error) {
     console.error('Erro ao carregar dados do dashboard:', error)
   } finally {
