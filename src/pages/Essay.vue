@@ -153,8 +153,7 @@ async function handleSubmit() {
     const result = await createEssay(payload)
     submittedEssay.value = result
 
-    if (result.feedback) {
-    } else {
+    if (!result.feedback) {
       setTimeout(() => {
         router.push('/dashboard')
       }, 2000)

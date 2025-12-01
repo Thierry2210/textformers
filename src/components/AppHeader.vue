@@ -18,8 +18,11 @@
           </div>
         </router-link>
 
+        <button @click="isOpen = !isOpen" class="sm:hidden p-2 rounded-lg text-secondary-700 hover:bg-primary-50 transition-colors duration-200">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+
         <nav class="hidden sm:flex items-center gap-1">
-           <router-link v-if="!isLoggedIn" :class="navClass('/')" to="/">Início</router-link>
            <router-link v-if="isLoggedIn" :class="navClass('/dashboard')" to="/dashboard">Dashboard</router-link>
            <router-link v-if="isLoggedIn" :class="navClass('/essay')" to="/essay">Redação</router-link>
            <router-link v-if="isLoggedIn" :class="navClass('/plans')" to="/plans">Planos</router-link>
@@ -34,8 +37,6 @@
     <div v-if="isOpen" ref="menuRef" class="sm:hidden border-t border-primary-200/50 bg-white/95 backdrop-blur-md">
       <div class="max-w-7xl mx-auto px-4 py-4">
         <nav class="flex flex-col gap-1">
-           <router-link v-if="!isLoggedIn" @click="isOpen = false" :class="mobileNavClass('/')"
-             to="/">Início</router-link>
            <router-link v-if="isLoggedIn" @click="isOpen = false" :class="mobileNavClass('/dashboard')"
              to="/dashboard">Dashboard</router-link>
            <router-link v-if="isLoggedIn" @click="isOpen = false" :class="mobileNavClass('/essay')"

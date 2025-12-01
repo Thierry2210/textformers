@@ -9,15 +9,3 @@ export async function getEssays() {
   const res = await api.get('/Essay')
   return res.data
 }
-
-export async function getEssayById(id) {
-  const res = await api.get(`/Essay/${id}`)
-  return res.data
-}
-
-export async function deleteEssay(id) {
-  const res = await api.delete(`/Essay/${id}`)
-  return res.data
-}
-
-export default api

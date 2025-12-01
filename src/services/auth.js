@@ -84,4 +84,9 @@ export async function updateUserPermission(userId, permission) {
   return res.data
 }
 
+export async function deleteUserById(id) {
+  const res = await api.delete(`/User/${id}`)
+  return res.data
+}
+
 export default api;

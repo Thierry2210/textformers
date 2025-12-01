@@ -31,7 +31,7 @@
   </div>
 
   <div v-else class="text-sm text-white">
-    <<router-link to="/login" class="text-black hover:text-primary-200">Entrar</router-link>
+    <router-link to="/login" class="text-black hover:text-primary-200">Entrar</router-link>
   </div>
 </template>
 

@@ -23,4 +23,11 @@ export default defineConfig([
   js.configs.recommended,
   ...pluginVue.configs['flat/essential'],
   ...pluginOxlint.configs['flat/recommended'],
+
+  {
+    files: ['src/pages/**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off'
+    }
+  },
 ])

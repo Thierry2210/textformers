@@ -24,5 +24,3 @@ export async function deletePlan(id) {
   const res = await api.delete(`/Plan/${id}`)
   return res.data
 }
-
-export default api

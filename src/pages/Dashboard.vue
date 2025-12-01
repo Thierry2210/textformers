@@ -168,13 +168,12 @@ const totalCorrigidos = ref(0)
 const principaisErros = ref(['Vírgula', 'Concordância'])
 const remainingCorrections = ref(9)
 const recent = ref([])
-
 const chartData = ref({
-  labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+  labels: [],
   datasets: [
     {
-      label: 'Correções',
-      data: [2, 5, 3, 8, 6, 10],
+      label: 'Redações Corrigidas',
+      data: [],
       borderColor: '#3B82F6',
       backgroundColor: 'rgba(59, 130, 246, 0.1)',
       tension: 0.4,
@@ -223,21 +222,18 @@ onMounted(async () => {
     totalCorrigidos.value = essays.length
     recent.value = essays.slice(-5).reverse()
 
-    // Calculate principaisErros (placeholder, since feedback is string)
     principaisErros.value = ['Vírgula', 'Concordância', 'Regência']
 
-    // Fetch plan and calculate remainingCorrections
     let plan = null
     if (user.planId) {
       plan = await getPlan(user.planId)
     }
     if (plan && plan.maxCorrections > 1000000) {
-      remainingCorrections.value = 999999 // Unlimited
+      remainingCorrections.value = 999999
     } else {
       remainingCorrections.value = (plan?.maxCorrections || 0) - essays.length
     }
 
-    // Calculate chartData
     const monthlyCounts = {}
     essays.forEach(essay => {
       const date = new Date(essay.createdAt)
